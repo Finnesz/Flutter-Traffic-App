@@ -4,7 +4,9 @@ A Flutter application for predicting traffic patterns on C4 Road, Malabon City. 
 
 ## Screenshot
 
-![C4 Road Traffic App](screenshots/screenshot_001.jpeg)
+<div align="center">
+  <img src="screenshots/screenshot_001.jpeg" alt="C4 Road Traffic App" width="300">
+</div>
 
 ## Features
 
@@ -24,7 +26,7 @@ A Flutter application for predicting traffic patterns on C4 Road, Malabon City. 
 
 ## Development
 
-This project was developed using **Claude Sonnet 4** in VS Code with **GitHub Education** benefits, demonstrating the power of AI-assisted development in creating sophisticated mobile applications.
+This project was developed with **Claude Sonnet 4** in VS Code with **GitHub Education** benefits, demonstrating the power of AI-assisted development in creating sophisticated mobile applications.
 
 ## Getting Started
 
