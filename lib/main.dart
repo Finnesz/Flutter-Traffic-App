@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -71,6 +70,9 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
   // Current selected time period
   String _selectedPeriod = 'hourly';
 
+  // Store the actual data timestamp
+  DateTime? _lastDataUpdate;
+
   // Available time periods
   final List<String> _timePeriods = ['hourly', 'daily', 'weekly', 'monthly'];
 
@@ -78,9 +80,16 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
   void initState() {
     super.initState();
     // Initialize the futures when the widget is created.
-    _trafficRecommendationsFuture = _loadTrafficRecommendations();
-    _forecastDataFuture = _loadForecastData();
-    _predictionSummaryFuture = _loadPredictionSummary();
+    _refreshData();
+  }
+
+  // Method to refresh all data
+  void _refreshData() {
+    setState(() {
+      _trafficRecommendationsFuture = _loadTrafficRecommendations();
+      _forecastDataFuture = _loadForecastData();
+      _predictionSummaryFuture = _loadPredictionSummary();
+    });
   }
 
   // Asynchronously loads traffic recommendations from FastAPI
@@ -90,11 +99,20 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
           'https://ravishing-education-production.up.railway.app/api/dashboard/user/end-user-traffic-recommendations');
       final response = await http.get(
         url,
-        headers: {'accept': 'application/json'},
+        headers: {
+          'accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
+        // Update the last data update timestamp
+        setState(() {
+          _lastDataUpdate = DateTime.now();
+        });
         return data;
       } else {
         throw Exception(
@@ -112,7 +130,12 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
           'https://ravishing-education-production.up.railway.app/api/dashboard/user/end-user-prediction-detail');
       final response = await http.get(
         url,
-        headers: {'accept': 'application/json'},
+        headers: {
+          'accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -178,7 +201,12 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
           'https://ravishing-education-production.up.railway.app/api/dashboard/user/end-user-prediction-summary');
       final response = await http.get(
         url,
-        headers: {'accept': 'application/json'},
+        headers: {
+          'accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -619,15 +647,18 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
         backgroundColor: const Color(0xFF192A31), // New app bar background
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshData,
+            tooltip: 'Refresh Data',
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: const Color(0xFF00C8FA), // New refresh indicator color
         onRefresh: () async {
-          setState(() {
-            _trafficRecommendationsFuture = _loadTrafficRecommendations();
-            _forecastDataFuture = _loadForecastData();
-            _predictionSummaryFuture = _loadPredictionSummary();
-          });
+          _refreshData();
         },
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -650,7 +681,8 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                               color: const Color(0xFFFFFFFF)), // White text
                     ),
                     const SizedBox(height: 8),
-                    Text('Updated: ${DateTime.now().toString().split('.')[0]}',
+                    Text(
+                        'Updated: ${_lastDataUpdate?.toString().split('.')[0] ?? 'Loading...'}',
                         style: const TextStyle(
                             color: Color(0xFFB0BEC5))), // Light Gray
                   ],
