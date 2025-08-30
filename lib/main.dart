@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() async {
   // Ensure that the Flutter bindings are initialized before calling native code.
@@ -65,6 +66,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
   // Futures to hold the data fetched from JSON files.
   late Future<Map<String, dynamic>> _trafficRecommendationsFuture;
   late Future<Map<String, dynamic>> _forecastDataFuture;
+  late Future<Map<String, dynamic>> _predictionSummaryFuture;
 
   // Current selected time period
   String _selectedPeriod = 'hourly';
@@ -78,29 +80,116 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     // Initialize the futures when the widget is created.
     _trafficRecommendationsFuture = _loadTrafficRecommendations();
     _forecastDataFuture = _loadForecastData();
+    _predictionSummaryFuture = _loadPredictionSummary();
   }
 
-  // Asynchronously loads traffic recommendations from local JSON file.
+  // Asynchronously loads traffic recommendations from FastAPI
   Future<Map<String, dynamic>> _loadTrafficRecommendations() async {
     try {
-      String jsonString = await rootBundle
-          .loadString('assets/daily_end_user_traffic_recommendation.json');
-      final data = json.decode(jsonString);
-      return data as Map<String, dynamic>;
+      final url = Uri.parse(
+          'https://ravishing-education-production.up.railway.app/api/dashboard/user/end-user-traffic-recommendations');
+      final response = await http.get(
+        url,
+        headers: {'accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        return data;
+      } else {
+        throw Exception(
+            'Failed to load traffic recommendations: HTTP ${response.statusCode}');
+      }
     } catch (e) {
       throw Exception('Failed to load traffic recommendations: $e');
     }
   }
 
-  // Asynchronously loads forecast data from local JSON file.
+  // Asynchronously loads forecast data from FastAPI
   Future<Map<String, dynamic>> _loadForecastData() async {
     try {
-      String jsonString =
-          await rootBundle.loadString('assets/daily_forecast.json');
-      final data = json.decode(jsonString);
-      return data as Map<String, dynamic>;
+      final url = Uri.parse(
+          'https://ravishing-education-production.up.railway.app/api/dashboard/user/end-user-prediction-detail');
+      final response = await http.get(
+        url,
+        headers: {'accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+
+        // Transform the API response to match the expected format
+        Map<String, dynamic> transformedData = {};
+
+        // Transform hourly data
+        if (data['hourly'] != null) {
+          transformedData['hourly'] = (data['hourly'] as List).map((item) {
+            return {
+              'ds': item['time'],
+              'yhat': item['value'],
+            };
+          }).toList();
+        }
+
+        // Transform daily data
+        if (data['daily'] != null) {
+          transformedData['daily'] = (data['daily'] as List).map((item) {
+            return {
+              'ds': item['date'],
+              'yhat': item['value'],
+            };
+          }).toList();
+        }
+
+        // Transform weekly data
+        if (data['weekly'] != null) {
+          transformedData['weekly'] = (data['weekly'] as List).map((item) {
+            return {
+              'ds': item['week_start'], // Use week_start as the date
+              'yhat': item['value'],
+            };
+          }).toList();
+        }
+
+        // Transform monthly data
+        if (data['monthly'] != null) {
+          transformedData['monthly'] = (data['monthly'] as List).map((item) {
+            return {
+              'ds': item['month'],
+              'yhat': item['value'],
+            };
+          }).toList();
+        }
+
+        return transformedData;
+      } else {
+        throw Exception(
+            'Failed to load forecast data: HTTP ${response.statusCode}');
+      }
     } catch (e) {
       throw Exception('Failed to load forecast data: $e');
+    }
+  }
+
+  // Asynchronously loads prediction summary from FastAPI
+  Future<Map<String, dynamic>> _loadPredictionSummary() async {
+    try {
+      final url = Uri.parse(
+          'https://ravishing-education-production.up.railway.app/api/dashboard/user/end-user-prediction-summary');
+      final response = await http.get(
+        url,
+        headers: {'accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        return data;
+      } else {
+        throw Exception(
+            'Failed to load prediction summary: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load prediction summary: $e');
     }
   }
 
@@ -123,7 +212,10 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
       DateTime date = DateTime.parse(dateStr);
       switch (period) {
         case 'hourly':
-          return '${date.hour.toString().padLeft(2, '0')}:00';
+          int hour = date.hour;
+          String period = hour >= 12 ? 'PM' : 'AM';
+          int displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+          return '$displayHour $period';
         case 'daily':
           const List<String> dayNames = [
             'Mon',
@@ -136,7 +228,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
           ];
           return dayNames[date.weekday - 1];
         case 'weekly':
-          return 'W${((date.day - 1) ~/ 7) + 1}';
+          return '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
         case 'monthly':
           const List<String> monthNames = [
             'Jan',
@@ -169,7 +261,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     int maxItems;
     switch (_selectedPeriod) {
       case 'hourly':
-        maxItems = 12; // Show 12 hours
+        maxItems = 24; // Show all 24 hours
         break;
       case 'daily':
         maxItems = 7; // Show 7 days
@@ -178,7 +270,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
         maxItems = 4; // Show 4 weeks
         break;
       case 'monthly':
-        maxItems = 6; // Show 6 months
+        maxItems = 12; // Show all 12 months
         break;
       default:
         maxItems = 7;
@@ -228,22 +320,52 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: CustomPaint(
-                size: Size(
-                    double.infinity,
-                    MediaQuery.of(context).orientation == Orientation.landscape
-                        ? MediaQuery.of(context).size.height * 0.6
-                        : MediaQuery.of(context).size.height * 0.25),
-                painter: LineChartPainter(
-                  displayData,
-                  maxYhat,
-                  minYhat,
-                  _getTrafficLevelColor,
-                  _formatDate,
-                  _selectedPeriod,
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              child: (_selectedPeriod == 'hourly' ||
+                      _selectedPeriod == 'monthly')
+                  ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Container(
+                        width: displayData.length *
+                                (_selectedPeriod == 'hourly' ? 40.0 : 60.0) +
+                            40, // Different spacing for hourly vs monthly
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20), // Add padding for edge labels
+                        child: CustomPaint(
+                          size: Size(
+                              displayData.length *
+                                  (_selectedPeriod == 'hourly' ? 40.0 : 60.0),
+                              MediaQuery.of(context).orientation ==
+                                      Orientation.landscape
+                                  ? MediaQuery.of(context).size.height * 0.6
+                                  : MediaQuery.of(context).size.height * 0.25),
+                          painter: LineChartPainter(
+                            displayData,
+                            maxYhat,
+                            minYhat,
+                            _getTrafficLevelColor,
+                            _formatDate,
+                            _selectedPeriod,
+                          ),
+                        ),
+                      ),
+                    )
+                  : CustomPaint(
+                      size: Size(
+                          double.infinity,
+                          MediaQuery.of(context).orientation ==
+                                  Orientation.landscape
+                              ? MediaQuery.of(context).size.height * 0.6
+                              : MediaQuery.of(context).size.height * 0.25),
+                      painter: LineChartPainter(
+                        displayData,
+                        maxYhat,
+                        minYhat,
+                        _getTrafficLevelColor,
+                        _formatDate,
+                        _selectedPeriod,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -334,6 +456,160 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     );
   }
 
+  // Helper method to build prediction summary widget
+  Widget _buildPredictionSummary(Map<String, dynamic> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Traffic Summary',
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall
+              ?.copyWith(color: const Color(0xFFFFFFFF)), // White text
+        ),
+        const SizedBox(height: 12),
+
+        // Today's Summary
+        Card(
+          elevation: 2,
+          color: const Color(0xFF293949),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Today (${_formatApiDate(data['today']?.toString() ?? '')})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00C8FA),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Total Vehicles: ${data['vhcl_today_sum']?.toString() ?? 'N/A'}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Peak: ${_formatTime(data['today_analytics']?['peak']?['time'])} (${data['today_analytics']?['peak']?['value']} vehicles)',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                Text(
+                  'Low: ${_formatTime(data['today_analytics']?['low']?['time'])} (${data['today_analytics']?['low']?['value']} vehicles)',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                Text(
+                  'Average: ${data['today_analytics']?['avg']?.toString() ?? 'N/A'} vehicles/hour',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Current Week Summary
+        Card(
+          elevation: 2,
+          color: const Color(0xFF293949),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'This Week (${_formatApiDate(data['current_week_range']?['start'])} - ${_formatApiDate(data['current_week_range']?['end'])})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00C8FA),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Total Vehicles: ${data['vhcl_current_week_sum']?.toString() ?? 'N/A'}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                Text(
+                  'Daily Average: ${data['weekly_analytics']?['avg']?.toString() ?? 'N/A'} vehicles',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Three Months Summary
+        Card(
+          elevation: 2,
+          color: const Color(0xFF293949),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Three Months (${_formatApiDate(data['three_months_range']?['start'])} - ${_formatApiDate(data['three_months_range']?['end'])})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00C8FA),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Total Vehicles: ${data['vhcl_three_months_sum']?.toString() ?? 'N/A'}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                Text(
+                  'Monthly Average: ${data['three_months_analytics']?['avg']?.toString() ?? 'N/A'} vehicles',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to format API dates
+  String _formatApiDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'N/A';
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.month}/${date.day}/${date.year}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  // Helper method to format time from API
+  String _formatTime(String? timeStr) {
+    if (timeStr == null || timeStr.isEmpty) return 'N/A';
+    try {
+      final time = DateTime.parse(timeStr);
+      int hour = time.hour;
+      String period = hour >= 12 ? 'PM' : 'AM';
+      int displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      return '$displayHour $period';
+    } catch (e) {
+      return timeStr;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -350,6 +626,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
           setState(() {
             _trafficRecommendationsFuture = _loadTrafficRecommendations();
             _forecastDataFuture = _loadForecastData();
+            _predictionSummaryFuture = _loadPredictionSummary();
           });
         },
         child: ListView(
@@ -570,7 +847,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
               },
             ),
             FutureBuilder<Map<String, dynamic>>(
-              future: _trafficRecommendationsFuture,
+              future: _predictionSummaryFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox.shrink();
@@ -578,34 +855,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                   return const SizedBox.shrink();
                 } else if (snapshot.hasData) {
                   final data = snapshot.data!;
-                  final summaryText = data['summary_reco'] as String? ?? '';
-
-                  if (summaryText.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Traffic Summary',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(
-                                color: const Color(0xFFFFFFFF)), // White text
-                      ),
-                      const SizedBox(height: 12),
-                      Card(
-                        elevation: 2,
-                        color: const Color(0xFF293949), // New card color
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: _buildRecommendationText(summaryText),
-                        ),
-                      ),
-                    ],
-                  );
+                  return _buildPredictionSummary(data);
                 } else {
                   return const SizedBox.shrink();
                 }
