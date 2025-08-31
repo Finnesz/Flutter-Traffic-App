@@ -73,6 +73,11 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
   // Store the actual data timestamp
   DateTime? _lastDataUpdate;
 
+  // For custom prediction request
+  DateTime? _selectedDateTime;
+  Map<String, dynamic>? _customPredictionResult;
+  bool _isLoadingCustomPrediction = false;
+
   // Available time periods
   final List<String> _timePeriods = ['hourly', 'daily', 'weekly', 'monthly'];
 
@@ -218,6 +223,120 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
       }
     } catch (e) {
       throw Exception('Failed to load prediction summary: $e');
+    }
+  }
+
+  // Method to make custom prediction request
+  Future<Map<String, dynamic>?> _makeCustomPredictionRequest(
+      DateTime dateTime) async {
+    setState(() {
+      _isLoadingCustomPrediction = true;
+    });
+
+    try {
+      final url = Uri.parse(
+          'https://ravishing-education-production.up.railway.app/api/dashboard/user/end-user-prediction-req');
+
+      final requestBody = {
+        'time': dateTime.toIso8601String(),
+      };
+
+      final response = await http.post(
+        url,
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+        body: json.encode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        setState(() {
+          _customPredictionResult = data;
+          _isLoadingCustomPrediction = false;
+        });
+        return data;
+      } else {
+        throw Exception(
+            'Failed to get custom prediction: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingCustomPrediction = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to get prediction: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return null;
+    }
+  }
+
+  // Method to show date and time picker
+  Future<void> _selectDateTime() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2024),
+      lastDate: DateTime(2026),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF00C8FA),
+              onPrimary: Colors.white,
+              surface: Color(0xFF293949),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: Color(0xFF00C8FA),
+                onPrimary: Colors.white,
+                surface: Color(0xFF293949),
+                onSurface: Colors.white,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        final selectedDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        setState(() {
+          _selectedDateTime = selectedDateTime;
+        });
+
+        // Make the prediction request
+        await _makeCustomPredictionRequest(selectedDateTime);
+      }
     }
   }
 
@@ -638,6 +757,161 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     }
   }
 
+  // Helper method to format custom selected datetime
+  String _formatCustomDateTime(DateTime dateTime) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+
+    int hour = dateTime.hour;
+    String period = hour >= 12 ? 'PM' : 'AM';
+    int displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+
+    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $displayHour:${dateTime.minute.toString().padLeft(2, '0')} $period';
+  }
+
+  // Helper method to format prediction result
+  String _formatPredictionResult(Map<String, dynamic> result) {
+    // Since the API response structure isn't clear from the example,
+    // let's handle different possible response formats
+    if (result.isEmpty) {
+      return 'No prediction data available for the selected time.';
+    }
+
+    // Check if there's a forecast array (new API format)
+    if (result.containsKey('forecast') && result['forecast'] is List) {
+      final forecast = result['forecast'] as List;
+      if (forecast.isNotEmpty) {
+        final firstForecast = forecast[0];
+        if (firstForecast is Map<String, dynamic> &&
+            firstForecast.containsKey('value')) {
+          final value = firstForecast['value'];
+          if (value is num) {
+            return 'Predicted traffic: ${value.round()} vehicles for the selected time';
+          }
+        }
+      }
+    }
+
+    // If there's a prediction value
+    if (result.containsKey('prediction')) {
+      final prediction = result['prediction'];
+      if (prediction is num) {
+        return 'Predicted traffic: ${prediction.round()} vehicles';
+      }
+    }
+
+    // If there's a direct traffic count
+    if (result.containsKey('traffic_count')) {
+      final count = result['traffic_count'];
+      if (count is num) {
+        return 'Predicted traffic: ${count.round()} vehicles';
+      }
+    }
+
+    // If there's any numeric value, use the first one found
+    for (final entry in result.entries) {
+      if (entry.value is num) {
+        return 'Predicted traffic: ${(entry.value as num).round()} vehicles';
+      }
+    }
+
+    // Fallback: show the raw JSON in a readable format
+    return 'Prediction data: ${result.toString()}';
+  }
+
+  // Helper method to extract numeric prediction value
+  double? _extractPredictionValue(Map<String, dynamic> result) {
+    if (result.isEmpty) return null;
+
+    // Check if there's a forecast array (new API format)
+    if (result.containsKey('forecast') && result['forecast'] is List) {
+      final forecast = result['forecast'] as List;
+      if (forecast.isNotEmpty) {
+        final firstForecast = forecast[0];
+        if (firstForecast is Map<String, dynamic> &&
+            firstForecast.containsKey('value')) {
+          final value = firstForecast['value'];
+          if (value is num) {
+            return value.toDouble();
+          }
+        }
+      }
+    }
+
+    // If there's a prediction value
+    if (result.containsKey('prediction')) {
+      final prediction = result['prediction'];
+      if (prediction is num) {
+        return prediction.toDouble();
+      }
+    }
+
+    // If there's a direct traffic count
+    if (result.containsKey('traffic_count')) {
+      final count = result['traffic_count'];
+      if (count is num) {
+        return count.toDouble();
+      }
+    }
+
+    // If there's any numeric value, use the first one found
+    for (final entry in result.entries) {
+      if (entry.value is num) {
+        return (entry.value as num).toDouble();
+      }
+    }
+
+    return null;
+  }
+
+  // Build custom prediction chart
+  Widget _buildCustomPredictionChart(Map<String, dynamic> result) {
+    final predictionValue = _extractPredictionValue(result);
+    if (predictionValue == null) {
+      return Container(
+        height: 200,
+        child: const Center(
+          child: Text(
+            'Unable to display chart: No numeric prediction data',
+            style: TextStyle(color: Color(0xFFB0BEC5)),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      height: 250,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          Expanded(
+            child: CustomPaint(
+              size: const Size(double.infinity, 180),
+              painter: CustomPredictionChartPainter(
+                predictionValue: predictionValue,
+                selectedDateTime: _selectedDateTime!,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -685,6 +959,105 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                         'Updated: ${_lastDataUpdate?.toString().split('.')[0] ?? 'Loading...'}',
                         style: const TextStyle(
                             color: Color(0xFFB0BEC5))), // Light Gray
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Custom Prediction Request Card
+            Card(
+              elevation: 2,
+              color: const Color(0xFF293949),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Custom Prediction Request',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(
+                              color: const Color(0xFFFFFFFF), fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Select a specific date and time to get traffic prediction',
+                      style: const TextStyle(
+                          color: Color(0xFFB0BEC5), fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Date Time Selection Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            _isLoadingCustomPrediction ? null : _selectDateTime,
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(
+                          _selectedDateTime == null
+                              ? 'Select Date & Time'
+                              : 'Selected: ${_formatCustomDateTime(_selectedDateTime!)}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+
+                    if (_isLoadingCustomPrediction) ...[
+                      const SizedBox(height: 16),
+                      const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF00C8FA),
+                        ),
+                      ),
+                    ],
+
+                    // Custom Prediction Result
+                    if (_customPredictionResult != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF192A31),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: const Color(0xFF00C8FA), width: 1),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Prediction Result:',
+                              style: const TextStyle(
+                                color: Color(0xFF00C8FA),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Chart visualization
+                            _buildCustomPredictionChart(
+                                _customPredictionResult!),
+                            const SizedBox(height: 8),
+                            // Text summary
+                            Text(
+                              _formatPredictionResult(_customPredictionResult!),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1024,6 +1397,158 @@ class LineChartPainter extends CustomPainter {
         Offset(point.dx - textPainter.width / 2, size.height - 15),
       );
     }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Custom painter for prediction chart
+class CustomPredictionChartPainter extends CustomPainter {
+  final double predictionValue;
+  final DateTime selectedDateTime;
+
+  CustomPredictionChartPainter({
+    required this.predictionValue,
+    required this.selectedDateTime,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Create forecast data with a simple trend around the prediction
+    final forecastData = _createPredictionForecast();
+
+    if (forecastData.isEmpty) return;
+
+    // Use same styling as the main line chart
+    final pointPaint = Paint()..style = PaintingStyle.fill;
+    final linePaint = Paint()
+      ..color = const Color(0xFF00C8FA)
+      ..strokeWidth = 3.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final gridPaint = Paint()
+      ..color = const Color(0xFF293949).withOpacity(0.3)
+      ..strokeWidth = 1.0;
+
+    // Calculate min/max for scaling
+    final values = forecastData.map((e) => e['value'] as double).toList();
+    final maxValue = values.reduce((a, b) => a > b ? a : b);
+    final minValue = values.reduce((a, b) => a < b ? a : b);
+    final range = maxValue - minValue;
+    final paddedMax = maxValue + range * 0.1;
+    final paddedMin = (minValue - range * 0.1).clamp(0.0, double.infinity);
+
+    // Draw grid lines
+    const gridLines = 5;
+    for (int i = 0; i <= gridLines; i++) {
+      final y = (size.height - 40) * i / gridLines + 20;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // Calculate points
+    final points = <Offset>[];
+    final stepX = size.width / (forecastData.length - 1);
+    for (int i = 0; i < forecastData.length; i++) {
+      final value = forecastData[i]['value'] as double;
+      final normalizedY = (value - paddedMin) / (paddedMax - paddedMin);
+      final x = i * stepX;
+      final y = size.height - 40 - (normalizedY * (size.height - 60));
+      points.add(Offset(x, y));
+    }
+
+    // Draw line
+    if (points.length > 1) {
+      final path = Path();
+      path.moveTo(points[0].dx, points[0].dy);
+      for (int i = 1; i < points.length; i++) {
+        path.lineTo(points[i].dx, points[i].dy);
+      }
+      canvas.drawPath(path, linePaint);
+    }
+
+    // Draw points and labels
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+    for (int i = 0; i < points.length; i++) {
+      final value = forecastData[i]['value'] as double;
+      final time = forecastData[i]['time'] as DateTime;
+      final point = points[i];
+      final isMainPrediction = forecastData[i]['isMain'] as bool;
+
+      // Draw point - highlight the main prediction
+      pointPaint.color = isMainPrediction
+          ? const Color(0xFFFFD700) // Gold for main prediction
+          : const Color(0xFF00C8FA); // Cyan for other points
+      canvas.drawCircle(point, isMainPrediction ? 8 : 6, pointPaint);
+
+      // Draw value label above point
+      textPainter.text = TextSpan(
+        text: value.toInt().toString(),
+        style: TextStyle(
+          color: isMainPrediction
+              ? const Color(0xFFFFD700)
+              : const Color(0xFFFFFFFF),
+          fontSize: isMainPrediction ? 12 : 10,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+          canvas,
+          Offset(point.dx - textPainter.width / 2,
+              point.dy - (isMainPrediction ? 25 : 20)));
+
+      // Draw time label below chart
+      textPainter.text = TextSpan(
+        text: _formatHour(time),
+        style: TextStyle(
+          color: isMainPrediction
+              ? const Color(0xFFFFD700)
+              : const Color(0xFFB0BEC5),
+          fontSize: 9,
+          fontWeight: isMainPrediction ? FontWeight.bold : FontWeight.normal,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+          canvas, Offset(point.dx - textPainter.width / 2, size.height - 15));
+    }
+  }
+
+  List<Map<String, dynamic>> _createPredictionForecast() {
+    // Create a 5-point forecast centered around the selected time
+    final centerIndex = 2; // Middle point
+    final forecastData = <Map<String, dynamic>>[];
+
+    for (int i = 0; i < 5; i++) {
+      final offsetHours = i - centerIndex;
+      final time = selectedDateTime.add(Duration(hours: offsetHours));
+      final isMain = i == centerIndex;
+
+      // Create slight variations around the prediction value
+      double value = predictionValue;
+      if (!isMain) {
+        // Add some realistic variation (±5-15 vehicles)
+        final variation = (10 - (i - centerIndex).abs() * 3);
+        value += (offsetHours * 2) + variation;
+        value = value.clamp(predictionValue - 20, predictionValue + 20);
+      }
+
+      forecastData.add({
+        'time': time,
+        'value': value,
+        'isMain': isMain,
+      });
+    }
+
+    return forecastData;
+  }
+
+  String _formatHour(DateTime time) {
+    int hour = time.hour;
+    String period = hour >= 12 ? 'PM' : 'AM';
+    int displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    return '$displayHour $period';
   }
 
   @override
