@@ -345,13 +345,10 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
   // Helper method to get traffic level color
   Color _getTrafficLevelColor(double yhat) {
     if (yhat <= 50) return const Color(0xFF4CAF50); // Green for light traffic
-    if (yhat <= 100)
+    if (yhat <= 100) {
       return const Color.fromARGB(
-          // TODO: Change the dots to #00C8FA regardless of traffic
-          255,
-          0,
-          17,
-          255); // Orange for moderate traffic
+          255, 0, 17, 255); // Orange for moderate traffic
+    }
     return const Color.fromARGB(255, 111, 54, 244); // Red for heavy traffic
   }
 
