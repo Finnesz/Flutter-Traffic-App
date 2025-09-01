@@ -20,7 +20,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
-  assets:
-    - assets/daily_end_user_traffic_recommendation.json
-    - assets/daily_forecast.json
