@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -16,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'C4 Road Traffic Prediction',
+      title: 'SmartTrafficMalabon',
       debugShowCheckedModeBanner: false, // Remove debug banner
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -35,10 +37,10 @@ class MyApp extends StatelessWidget {
           headlineSmall:
               TextStyle(color: Color(0xFFFFFFFF), fontWeight: FontWeight.bold),
         ),
-        chipTheme: ChipThemeData(
-          backgroundColor: const Color(0xFF586A80), // Unselected chip color
-          selectedColor: const Color(0xFF00C8FA), // Selected chip color
-          labelStyle: const TextStyle(color: Colors.white),
+        chipTheme: const ChipThemeData(
+          backgroundColor: Color(0xFF586A80), // Unselected chip color
+          selectedColor: Color(0xFF00C8FA), // Selected chip color
+          labelStyle: TextStyle(color: Colors.white),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -452,10 +454,10 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Traffic Forecast',
                 style: TextStyle(
                     fontSize: 16,
@@ -477,7 +479,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                                 (_selectedPeriod == 'hourly' ? 40.0 : 60.0) +
                             40, // Different spacing for hourly vs monthly
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20), // Add padding for edge labels
+                            horizontal: 12), // Add padding for edge labels
                         child: CustomPaint(
                           size: Size(
                               displayData.length *
@@ -620,7 +622,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
         // Today's Summary
         Card(
           elevation: 2,
-          color: const Color(0xFF293949),
+          color: const Color(0xFF1A252F),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -641,15 +643,32 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                       const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Peak: ${_formatTime(data['today_analytics']?['peak']?['time'])} (${data['today_analytics']?['peak']?['value']} vehicles) - ${_capitalizeCondition(data['today_analytics']?['peak']?['condition'])}',
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Peak: ${_formatTime(data['today_analytics']?['peak']?['time'])} (${data['today_analytics']?['peak']?['value']} vehicles)',
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFFB0BEC5)),
+                      ),
+                    ),
+                    _buildConditionBadge(
+                        data['today_analytics']?['peak']?['condition']),
+                  ],
                 ),
-                Text(
-                  'Low: ${_formatTime(data['today_analytics']?['low']?['time'])} (${data['today_analytics']?['low']?['value']} vehicles) - ${_capitalizeCondition(data['today_analytics']?['low']?['condition'])}',
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Low: ${_formatTime(data['today_analytics']?['low']?['time'])} (${data['today_analytics']?['low']?['value']} vehicles)',
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFFB0BEC5)),
+                      ),
+                    ),
+                    _buildConditionBadge(
+                        data['today_analytics']?['low']?['condition']),
+                  ],
                 ),
                 Text(
                   'Average: ${data['today_analytics']?['avg']?.toString() ?? 'N/A'} vehicles/hour',
@@ -665,7 +684,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
         // Current Week Summary
         Card(
           elevation: 2,
-          color: const Color(0xFF293949),
+          color: const Color(0xFF1A252F),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -686,15 +705,32 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                       const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Peak Day: ${_formatApiDate(data['weekly_analytics']?['peak']?['date'])} (${data['weekly_analytics']?['peak']?['value']} vehicles) - ${_capitalizeCondition(data['weekly_analytics']?['peak']?['condition'])}',
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Peak Day: ${_formatApiDate(data['weekly_analytics']?['peak']?['date'])} (${data['weekly_analytics']?['peak']?['value']} vehicles)',
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFFB0BEC5)),
+                      ),
+                    ),
+                    _buildConditionBadge(
+                        data['weekly_analytics']?['peak']?['condition']),
+                  ],
                 ),
-                Text(
-                  'Low Day: ${_formatApiDate(data['weekly_analytics']?['low']?['date'])} (${data['weekly_analytics']?['low']?['value']} vehicles) - ${_capitalizeCondition(data['weekly_analytics']?['low']?['condition'])}',
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Low Day: ${_formatApiDate(data['weekly_analytics']?['low']?['date'])} (${data['weekly_analytics']?['low']?['value']} vehicles)',
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFFB0BEC5)),
+                      ),
+                    ),
+                    _buildConditionBadge(
+                        data['weekly_analytics']?['low']?['condition']),
+                  ],
                 ),
                 Text(
                   'Daily Average: ${data['weekly_analytics']?['avg']?.toString() ?? 'N/A'} vehicles',
@@ -710,7 +746,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
         // Three Months Summary
         Card(
           elevation: 2,
-          color: const Color(0xFF293949),
+          color: const Color(0xFF1A252F),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -731,15 +767,32 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                       const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Peak Month: ${_formatApiDate(data['three_months_analytics']?['peak']?['month'])} (${data['three_months_analytics']?['peak']?['value']} vehicles) - ${_capitalizeCondition(data['three_months_analytics']?['peak']?['condition'])}',
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Peak Month: ${_formatApiDate(data['three_months_analytics']?['peak']?['month'])} (${data['three_months_analytics']?['peak']?['value']} vehicles)',
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFFB0BEC5)),
+                      ),
+                    ),
+                    _buildConditionBadge(
+                        data['three_months_analytics']?['peak']?['condition']),
+                  ],
                 ),
-                Text(
-                  'Low Month: ${_formatApiDate(data['three_months_analytics']?['low']?['month'])} (${data['three_months_analytics']?['low']?['value']} vehicles) - ${_capitalizeCondition(data['three_months_analytics']?['low']?['condition'])}',
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Low Month: ${_formatApiDate(data['three_months_analytics']?['low']?['month'])} (${data['three_months_analytics']?['low']?['value']} vehicles)',
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFFB0BEC5)),
+                      ),
+                    ),
+                    _buildConditionBadge(
+                        data['three_months_analytics']?['low']?['condition']),
+                  ],
                 ),
                 Text(
                   'Monthly Average: ${data['three_months_analytics']?['avg']?.toString() ?? 'N/A'} vehicles',
@@ -785,6 +838,45 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     return condition[0].toUpperCase() + condition.substring(1);
   }
 
+  // Helper method to get color for traffic condition
+  Color _getConditionColor(String? condition) {
+    if (condition == null) return Colors.grey;
+    switch (condition.toLowerCase()) {
+      case 'light':
+        return Colors.green;
+      case 'moderate':
+        return Colors.orange;
+      case 'heavy':
+      case 'congested':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Helper method to build condition badge
+  Widget _buildConditionBadge(String? condition) {
+    final color = _getConditionColor(condition);
+    final text = _capitalizeCondition(condition);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   // Helper method to format custom selected datetime
   String _formatCustomDateTime(DateTime dateTime) {
     final months = [
@@ -807,56 +899,6 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     int displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
 
     return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $displayHour:${dateTime.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  // Helper method to format prediction result
-  String _formatPredictionResult(Map<String, dynamic> result) {
-    // Since the API response structure isn't clear from the example,
-    // let's handle different possible response formats
-    if (result.isEmpty) {
-      return 'No prediction data available for the selected time.';
-    }
-
-    // Check if there's a forecast array (new API format)
-    if (result.containsKey('forecast') && result['forecast'] is List) {
-      final forecast = result['forecast'] as List;
-      if (forecast.isNotEmpty) {
-        final firstForecast = forecast[0];
-        if (firstForecast is Map<String, dynamic> &&
-            firstForecast.containsKey('value')) {
-          final value = firstForecast['value'];
-          if (value is num) {
-            return 'Predicted traffic: ${value.round()} vehicles for the selected time';
-          }
-        }
-      }
-    }
-
-    // If there's a prediction value
-    if (result.containsKey('prediction')) {
-      final prediction = result['prediction'];
-      if (prediction is num) {
-        return 'Predicted traffic: ${prediction.round()} vehicles';
-      }
-    }
-
-    // If there's a direct traffic count
-    if (result.containsKey('traffic_count')) {
-      final count = result['traffic_count'];
-      if (count is num) {
-        return 'Predicted traffic: ${count.round()} vehicles';
-      }
-    }
-
-    // If there's any numeric value, use the first one found
-    for (final entry in result.entries) {
-      if (entry.value is num) {
-        return 'Predicted traffic: ${(entry.value as num).round()} vehicles';
-      }
-    }
-
-    // Fallback: show the raw JSON in a readable format
-    return 'Prediction data: ${result.toString()}';
   }
 
   // Helper method to extract numeric prediction value
@@ -909,7 +951,7 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     final predictionValue = _extractPredictionValue(result);
     if (predictionValue == null) {
       return Container(
-        height: 200,
+        height: 238, // Reduced height to prevent overflow (280 - 42)
         child: const Center(
           child: Text(
             'Unable to display chart: No numeric prediction data',
@@ -920,15 +962,15 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     }
 
     return Container(
-      height: 250,
-      padding: const EdgeInsets.all(16),
+      height: 238, // Reduced height to prevent overflow (280 - 42)
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 4),
           Expanded(
             child: CustomPaint(
-              size: const Size(double.infinity, 180),
+              size: const Size(double.infinity, 218), // Reduced from 260 to 218
               painter: CustomPredictionChartPainter(
                 predictionValue: predictionValue,
                 selectedDateTime: _selectedDateTime!,
@@ -945,7 +987,24 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF192A31), // New background color
       appBar: AppBar(
-        title: const Text('C4 Road - Malabon City'),
+        title: RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            children: [
+              TextSpan(text: 'SmartTraffic'),
+              TextSpan(
+                text: 'Malabon',
+                style: TextStyle(
+                  color: Color(0xFF00C8FA), // Cyan color for Malabon
+                ),
+              ),
+            ],
+          ),
+        ),
         backgroundColor: const Color(0xFF192A31), // New app bar background
         foregroundColor: Colors.white,
         elevation: 0,
@@ -962,341 +1021,603 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
         onRefresh: () async {
           _refreshData();
         },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Header Card
-            Card(
-              elevation: 4,
-              color: const Color(0xFF293949), // New card color
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'C4 Road Traffic Status',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(
-                              color: const Color(0xFFFFFFFF)), // White text
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                        'Updated: ${_lastDataUpdate?.toString().split('.')[0] ?? 'Loading...'}',
-                        style: const TextStyle(
-                            color: Color(0xFFB0BEC5))), // Light Gray
-                  ],
-                ),
-              ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header Dashboard - Current Status
+              _buildCurrentStatusHeader(),
+
+              _buildMainContentTabs(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // New methods for improved design
+  Widget _buildCurrentStatusHeader() {
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+
+    return Container(
+      margin: EdgeInsets.all(isPortrait ? 8 : 12), // Further reduced margin
+      child: Card(
+        elevation: 8,
+        color: const Color(0xFF1A252F),
+        child: Container(
+          padding:
+              EdgeInsets.all(isPortrait ? 12 : 16), // Further reduced padding
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1A252F), Color(0xFF293949)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(height: 16),
-
-            // Custom Prediction Request Card
-            Card(
-              elevation: 2,
-              color: const Color(0xFF293949),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Custom Prediction Request',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(
-                              color: const Color(0xFFFFFFFF), fontSize: 18),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Select a specific date and time to get traffic prediction',
-                      style: const TextStyle(
-                          color: Color(0xFFB0BEC5), fontSize: 14),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Date Time Selection Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            _isLoadingCustomPrediction ? null : _selectDateTime,
-                        icon: const Icon(Icons.calendar_today),
-                        label: Text(
-                          _selectedDateTime == null
-                              ? 'Select Date & Time'
-                              : 'Selected: ${_formatCustomDateTime(_selectedDateTime!)}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-
-                    if (_isLoadingCustomPrediction) ...[
-                      const SizedBox(height: 16),
-                      const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF00C8FA),
-                        ),
-                      ),
-                    ],
-
-                    // Custom Prediction Result
-                    if (_customPredictionResult != null) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF192A31),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: const Color(0xFF00C8FA), width: 1),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Prediction Result:',
-                              style: const TextStyle(
-                                color: Color(0xFF00C8FA),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Chart visualization
-                            _buildCustomPredictionChart(
-                                _customPredictionResult!),
-                            const SizedBox(height: 8),
-                            // Text summary
-                            Text(
-                              _formatPredictionResult(_customPredictionResult!),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Time Period Selector and Forecast Chart Combined
-            Card(
-              elevation: 2,
-              color: const Color(0xFF293949), // New card color
-              child: Column(
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Time Period Selector
-                  Padding(
-                    padding: const EdgeInsets.all(16),
+                  Flexible(
+                    // Make the title section flexible
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 0),
-                        Row(
-                          children: _timePeriods.map((period) {
-                            final isSelected = period == _selectedPeriod;
-                            final isLandscape =
-                                MediaQuery.of(context).orientation ==
-                                    Orientation.landscape;
-                            return Expanded(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 2),
-                                child: ChoiceChip(
-                                  label: Text(
-                                    period.capitalize(),
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.black
-                                          : Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: isLandscape
-                                          ? 14
-                                          : 9, // Larger font in landscape
-                                    ),
-                                  ),
-                                  selected: isSelected,
-                                  showCheckmark: false, // Remove the check icon
-                                  onSelected: (selected) {
-                                    if (selected) {
-                                      setState(() {
-                                        _selectedPeriod = period;
-                                      });
-                                    }
-                                  },
-                                  selectedColor: const Color(
-                                      0xFF00C8FA), // New highlighted color
-                                  backgroundColor: const Color(
-                                      0xFF586A80), // New unselected button color
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: isLandscape ? 16 : 8,
-                                    vertical: isLandscape ? 12 : 8,
-                                  ), // Larger padding in landscape
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                        Text(
+                          'C4 Road - Malabon City',
+                          style: TextStyle(
+                            fontSize: isPortrait
+                                ? 18
+                                : 22, // Smaller font in portrait
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Updated: ${_lastDataUpdate?.toString().split('.')[0] ?? 'Loading...'}',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: isPortrait
+                                ? 10
+                                : 12, // Smaller font in portrait
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ],
                     ),
-                  ),
-                  // Forecast Chart
-                  FutureBuilder<Map<String, dynamic>>(
-                    future: _forecastDataFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.35,
-                          child: const Center(
-                              child: CircularProgressIndicator(
-                                  color: Color(
-                                      0xFF00C8FA))), // New highlighted color
-                        );
-                      } else if (snapshot.hasError) {
-                        return Container(
-                          height: MediaQuery.of(context).size.height * 0.35,
-                          padding: const EdgeInsets.all(16),
-                          child: Center(
-                            child: Text(
-                              'Error loading forecast: ${snapshot.error}',
-                              style: const TextStyle(
-                                  color: Color(0xFFF44336)), // Red error text
-                            ),
-                          ),
-                        );
-                      } else if (snapshot.hasData) {
-                        final data = snapshot.data!;
-                        final forecastList =
-                            data[_selectedPeriod] as List<dynamic>? ?? [];
-                        return _buildForecastChart(forecastList);
-                      }
-                      return SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.35);
-                    },
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Traffic Recommendations
-            FutureBuilder<Map<String, dynamic>>(
-              future: _trafficRecommendationsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                      child: CircularProgressIndicator(
-                          color: Color(0xFF00C8FA))); // New highlighted color
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              SizedBox(
+                  height: isPortrait ? 8 : 10), // Reduced spacing in portrait
+              FutureBuilder<Map<String, dynamic>>(
+                future: _predictionSummaryFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final data = snapshot.data!;
+                    final todayAnalytics = data['today_analytics'];
+                    return Row(
                       children: [
-                        Icon(Icons.error_outline,
-                            size: 64,
-                            color: const Color(0xFFF44336)), // Red error icon
-                        const SizedBox(height: 16),
-                        Text('Error: ${snapshot.error}',
-                            style: const TextStyle(
-                                color: Color(0xFFFFFFFF))), // White text
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(
-                                0xFF00C8FA), // New highlighted color
+                        Expanded(
+                          child: _buildStatusMetric(
+                            'Current Traffic',
+                            todayAnalytics?['avg']?.toString() ?? 'N/A',
+                            'vehicles/hour',
+                            Icons.traffic,
+                            const Color(0xFF00C8FA),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _trafficRecommendationsFuture =
-                                  _loadTrafficRecommendations();
-                            });
+                        ),
+                        SizedBox(
+                            width: isPortrait
+                                ? 6
+                                : 8), // Reduced spacing in portrait
+                        Expanded(
+                          child: _buildStatusMetric(
+                            'Today\'s Total',
+                            data['vhcl_today_sum']?.toString() ?? 'N/A',
+                            'vehicles',
+                            Icons.directions_car,
+                            const Color(0xFF00C8FA),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusMetric(
+      String title, String value, String unit, IconData icon, Color color) {
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+
+    return Container(
+      padding:
+          EdgeInsets.all(isPortrait ? 12 : 16), // Reduced padding in portrait
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon,
+                  color: color,
+                  size: isPortrait ? 18 : 20), // Smaller icon in portrait
+              const SizedBox(width: 6),
+              Flexible(
+                // Make text flexible to prevent overflow
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: isPortrait ? 12 : 14, // Smaller font in portrait
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: isPortrait ? 6 : 8), // Reduced spacing in portrait
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isPortrait ? 20 : 24, // Smaller font in portrait
+              fontWeight: FontWeight.bold,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+          Text(
+            unit,
+            style: TextStyle(
+              color: Colors.white60,
+              fontSize: isPortrait ? 10 : 12, // Smaller font in portrait
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContentTabs() {
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+
+    return DefaultTabController(
+      length: 3,
+      child: Container(
+        margin: const EdgeInsets.all(12), // Reduced margin from 16 to 12
+        child: Card(
+          elevation: 4,
+          color: const Color(0xFF293949),
+          child: Column(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1A252F),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: TabBar(
+                  labelColor: const Color(0xFF00C8FA),
+                  unselectedLabelColor: Colors.white60,
+                  indicatorColor: const Color(0xFF00C8FA),
+                  tabs: isPortrait
+                      ? [
+                          // Icon-only tabs for portrait mode
+                          const Tab(icon: Icon(Icons.trending_up, size: 20)),
+                          const Tab(icon: Icon(Icons.lightbulb, size: 20)),
+                          const Tab(icon: Icon(Icons.analytics, size: 20)),
+                        ]
+                      : [
+                          // Text + icon tabs for landscape mode
+                          const Tab(
+                              text: 'Forecast',
+                              icon: Icon(Icons.trending_up, size: 20)),
+                          const Tab(
+                              text: 'Recommendations',
+                              icon: Icon(Icons.lightbulb, size: 20)),
+                          const Tab(
+                              text: 'Summary',
+                              icon: Icon(Icons.analytics, size: 20)),
+                        ],
+                ),
+              ),
+              SizedBox(
+                height: 480, // Increased height from 400 to 480
+                child: TabBarView(
+                  children: [
+                    _buildForecastTab(),
+                    _buildRecommendationsTab(),
+                    _buildSummaryTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForecastTab() {
+    return Padding(
+      padding: const EdgeInsets.all(12), // Reduced padding
+      child: Column(
+        children: [
+          // Custom Prediction Section
+          Card(
+            elevation: 2,
+            color: const Color(0xFF1A252F),
+            child: Padding(
+              padding: const EdgeInsets.all(12), // Reduced padding
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Custom Prediction',
+                    style: TextStyle(
+                      fontSize: 14, // Slightly smaller
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF00C8FA),
+                    ),
+                  ),
+                  const SizedBox(height: 6), // Reduced spacing
+                  const Text(
+                    'Select date and time for prediction',
+                    style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11), // Smaller and shorter text
+                  ),
+                  const SizedBox(height: 10), // Reduced spacing
+
+                  // Date Time Selection Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          _isLoadingCustomPrediction ? null : _selectDateTime,
+                      icon: const Icon(Icons.calendar_today, size: 18),
+                      label: Text(
+                        _selectedDateTime == null
+                            ? 'Select Date & Time'
+                            : _formatCustomDateTime(_selectedDateTime!),
+                        style: const TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00C8FA),
+                        foregroundColor: const Color(0xFF1A252F),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8), // Reduced padding
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  if (_isLoadingCustomPrediction) ...[
+                    const SizedBox(height: 8), // Reduced spacing
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF00C8FA),
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ],
+
+                  // Custom Prediction Result
+                  if (_customPredictionResult != null) ...[
+                    const SizedBox(height: 8), // Reduced spacing
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8), // Reduced padding
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Prediction Result:',
+                                style: TextStyle(
+                                  color: Color(0xFF00C8FA),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12, // Smaller font
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _customPredictionResult = null;
+                                    _selectedDateTime = null;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1A252F),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back,
+                                    size: 16,
+                                    color: Color(0xFF00C8FA),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6), // Reduced spacing
+                          _buildCustomPredictionChart(_customPredictionResult!),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12), // Reduced spacing
+
+          // Time Period Selector - only show when no custom prediction is active
+          if (_customPredictionResult == null)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isPortrait =
+                    MediaQuery.of(context).orientation == Orientation.portrait;
+                final horizontalMargin = isPortrait ? 1.0 : 4.0;
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: _timePeriods.map((period) {
+                    final isSelected = period == _selectedPeriod;
+                    return Expanded(
+                      child: Container(
+                        margin:
+                            EdgeInsets.symmetric(horizontal: horizontalMargin),
+                        child: ChoiceChip(
+                          label: Text(
+                            period.capitalize(),
+                            style: TextStyle(
+                              color: isSelected ? Colors.black : Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: isPortrait ? 11 : 12,
+                            ),
+                          ),
+                          selected: isSelected,
+                          showCheckmark: false,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedPeriod = period;
+                              });
+                            }
                           },
-                          child: const Text('Retry'),
+                          selectedColor: const Color(0xFF00C8FA),
+                          backgroundColor: const Color(0xFF586A80),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          if (_customPredictionResult == null)
+            const SizedBox(height: 12), // Reduced spacing
+          // Forecast Chart - only show when no custom prediction is active
+          if (_customPredictionResult == null)
+            Expanded(
+              child: FutureBuilder<Map<String, dynamic>>(
+                future: _forecastDataFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                        child: CircularProgressIndicator(
+                            color: Color(0xFF00C8FA)));
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              color: Colors.red, size: 48),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Error loading forecast',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${snapshot.error}',
+                            style: const TextStyle(
+                                color: Colors.white60, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (snapshot.hasData) {
+                    final data = snapshot.data!;
+                    final forecastList =
+                        data[_selectedPeriod] as List<dynamic>? ?? [];
+                    return _buildForecastChart(forecastList);
+                  }
+                  return const SizedBox();
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationsTab() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _trafficRecommendationsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF00C8FA)));
+        } else if (snapshot.hasError) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: Colors.red, size: 48),
+                SizedBox(height: 16),
+                Text(
+                  'Error loading recommendations',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ],
+            ),
+          );
+        } else if (snapshot.hasData) {
+          return _buildTrafficRecommendations(snapshot.data!);
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildSummaryTab() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _predictionSummaryFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF00C8FA)));
+        } else if (snapshot.hasError) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: Colors.red, size: 48),
+                SizedBox(height: 16),
+                Text(
+                  'Error loading summary',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ],
+            ),
+          );
+        } else if (snapshot.hasData) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: _buildPredictionSummary(snapshot.data!),
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildTrafficRecommendations(Map<String, dynamic> data) {
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+    String recoKey = '${_selectedPeriod}_reco';
+    final recommendationText = data[recoKey] as String? ?? '';
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(isPortrait ? 12 : 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Traffic Recommendations (${_selectedPeriod.capitalize()})',
+            style: TextStyle(
+              fontSize: isPortrait ? 16 : 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: isPortrait ? 12 : 16),
+          if (recommendationText.isEmpty)
+            Card(
+              color: const Color(0xFF1A252F),
+              child: Padding(
+                padding: EdgeInsets.all(isPortrait ? 16 : 20),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: Colors.orange, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'No $_selectedPeriod recommendations available.',
+                        style: const TextStyle(color: Color(0xFFB0BEC5)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Card(
+              elevation: 2,
+              color: const Color(0xFF1A252F),
+              child: Padding(
+                padding: EdgeInsets.all(isPortrait ? 16 : 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.lightbulb,
+                            color: Color(0xFF00C8FA), size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Recommendations',
+                            style: TextStyle(
+                              fontSize: isPortrait ? 14 : 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF00C8FA),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
-                  );
-                } else if (snapshot.hasData) {
-                  final data = snapshot.data!;
-                  // Map period to the correct key in JSON
-                  String recoKey = '${_selectedPeriod}_reco';
-
-                  final recommendationText = data[recoKey] as String? ?? '';
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Traffic Recommendations (${_selectedPeriod.capitalize()})',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(
-                                color: const Color(0xFFFFFFFF)), // White text
-                      ),
-                      const SizedBox(height: 12),
-                      if (recommendationText.isEmpty)
-                        Card(
-                          color: const Color(0xFF293949), // New card color
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              'No ${_selectedPeriod} recommendations available.',
-                              style: const TextStyle(
-                                  color: Color(0xFFB0BEC5)), // Light Gray
-                            ),
-                          ),
-                        )
-                      else
-                        Card(
-                          elevation: 2,
-                          color: const Color(0xFF293949), // New card color
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: _buildRecommendationText(recommendationText),
-                          ),
-                        ),
-                    ],
-                  );
-                } else {
-                  return const Center(
-                      child: Text('No recommendations available.',
-                          style: TextStyle(
-                              color: Color(0xFFFFFFFF)))); // White text
-                }
-              },
+                    SizedBox(height: isPortrait ? 12 : 16),
+                    _buildRecommendationText(recommendationText),
+                  ],
+                ),
+              ),
             ),
-            FutureBuilder<Map<String, dynamic>>(
-              future: _predictionSummaryFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox.shrink();
-                } else if (snapshot.hasError) {
-                  return const SizedBox.shrink();
-                } else if (snapshot.hasData) {
-                  final data = snapshot.data!;
-                  return _buildPredictionSummary(data);
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
+        ],
       ),
     );
   }
