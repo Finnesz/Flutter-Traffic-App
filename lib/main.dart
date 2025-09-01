@@ -642,12 +642,12 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Peak: ${_formatTime(data['today_analytics']?['peak']?['time'])} (${data['today_analytics']?['peak']?['value']} vehicles)',
+                  'Peak: ${_formatTime(data['today_analytics']?['peak']?['time'])} (${data['today_analytics']?['peak']?['value']} vehicles) - ${_capitalizeCondition(data['today_analytics']?['peak']?['condition'])}',
                   style:
                       const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
                 ),
                 Text(
-                  'Low: ${_formatTime(data['today_analytics']?['low']?['time'])} (${data['today_analytics']?['low']?['value']} vehicles)',
+                  'Low: ${_formatTime(data['today_analytics']?['low']?['time'])} (${data['today_analytics']?['low']?['value']} vehicles) - ${_capitalizeCondition(data['today_analytics']?['low']?['condition'])}',
                   style:
                       const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
                 ),
@@ -685,6 +685,17 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                   style:
                       const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Peak Day: ${_formatApiDate(data['weekly_analytics']?['peak']?['date'])} (${data['weekly_analytics']?['peak']?['value']} vehicles) - ${_capitalizeCondition(data['weekly_analytics']?['peak']?['condition'])}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                Text(
+                  'Low Day: ${_formatApiDate(data['weekly_analytics']?['low']?['date'])} (${data['weekly_analytics']?['low']?['value']} vehicles) - ${_capitalizeCondition(data['weekly_analytics']?['low']?['condition'])}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
                 Text(
                   'Daily Average: ${data['weekly_analytics']?['avg']?.toString() ?? 'N/A'} vehicles',
                   style:
@@ -716,6 +727,17 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Total Vehicles: ${data['vhcl_three_months_sum']?.toString() ?? 'N/A'}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Peak Month: ${_formatApiDate(data['three_months_analytics']?['peak']?['month'])} (${data['three_months_analytics']?['peak']?['value']} vehicles) - ${_capitalizeCondition(data['three_months_analytics']?['peak']?['condition'])}',
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
+                ),
+                Text(
+                  'Low Month: ${_formatApiDate(data['three_months_analytics']?['low']?['month'])} (${data['three_months_analytics']?['low']?['value']} vehicles) - ${_capitalizeCondition(data['three_months_analytics']?['low']?['condition'])}',
                   style:
                       const TextStyle(fontSize: 14, color: Color(0xFFB0BEC5)),
                 ),
@@ -755,6 +777,12 @@ class _C4TrafficPredictionScreenState extends State<C4TrafficPredictionScreen> {
     } catch (e) {
       return timeStr;
     }
+  }
+
+  // Helper method to capitalize condition text
+  String _capitalizeCondition(String? condition) {
+    if (condition == null || condition.isEmpty) return 'N/A';
+    return condition[0].toUpperCase() + condition.substring(1);
   }
 
   // Helper method to format custom selected datetime
