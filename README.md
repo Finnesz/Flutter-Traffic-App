@@ -5,7 +5,7 @@ A comprehensive Flutter application for real-time traffic prediction and analysi
 ## Screenshot
 
 <div align="center">
-  <img src="screenshots/screenshot_002.jpeg" alt="C4 Road Traffic App" width="300">
+  <img src="screenshots/screenshot_002.png" alt="C4 Road Traffic App" width="300">
   ✨ New Look
 </div>
 
