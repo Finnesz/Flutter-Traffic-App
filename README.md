@@ -5,7 +5,7 @@ A comprehensive Flutter application for real-time traffic prediction and analysi
 ## Screenshot
 
 <div align="center">
-  <img src="screenshots/screenshot_002.png" alt="C4 Road Traffic App" width="300">
+  <img src="screenshots/screenshot_003.png" alt="C4 Road Traffic App" width="300">
 </div>
 <div align="center">
 ✨ New Look
@@ -25,15 +25,19 @@ A comprehensive Flutter application for real-time traffic prediction and analysi
 - **Actual Dates**: Weekly view shows real dates instead of generic week numbers
 
 ### 🎯 **Smart Traffic Recommendations**
-- **Period-Specific Advice**: Tailored recommendations for hourly, daily, weekly, and monthly patterns
-- **Dynamic Suggestions**: Real-time alternative routes and optimal travel times
-- **Condition-Based Tips**: Traffic strategies based on current congestion levels
+- **Tabbed Interface**: Separate tabs for General and Custom Prediction recommendations
+- **Modern Card Design**: Enhanced cards with gradient backgrounds and smart categorization
+- **Intelligent Classification**: Auto-categorizes recommendations by type (Peak Hours, Route, Timing, Low Traffic, etc.)
+- **Custom Predictions**: Interactive date/time selector for personalized traffic forecasts
+- **Real-Time API Integration**: Dynamic recommendations based on current traffic patterns
 
 ### 🎨 **Enhanced User Experience**
-- **Professional UI**: Dark theme with consistent color scheme
-- **Touch-Optimized**: Properly sized buttons that adapt to device orientation
-- **Smooth Interactions**: Pull-to-refresh functionality for live data updates
-- **Error Handling**: Graceful fallbacks and loading states
+- **Modern Three-Tab Navigation**: Forecast, Custom Prediction, and Summary tabs
+- **Professional UI**: Dark theme with gradient backgrounds and consistent Material Design
+- **Touch-Optimized**: Responsive buttons with reduced padding for better text display
+- **Smooth Interactions**: Pull-to-refresh functionality with loading states
+- **Overflow Prevention**: Proper layout management for all screen sizes
+- **Enhanced Charts**: Smaller forecast graphs with grey grid lines for better readability
 
 ## Technology Stack
 
@@ -50,7 +54,9 @@ A comprehensive Flutter application for real-time traffic prediction and analysi
 
 - **Traffic Predictions**: `/api/dashboard/user/end-user-prediction-detail`
 - **Analytics Summary**: `/api/dashboard/user/end-user-prediction-summary`  
-- **Recommendations**: `/api/dashboard/user/end-user-traffic-recommendations`
+- **General Recommendations**: `/api/dashboard/user/end-user-traffic-recommendations`
+- **Custom Predictions**: `/predict-for-datetime` (POST with datetime parameters)
+- **Custom Recommendations**: `/recommend-for-datetime` (POST with datetime parameters)
 
 ## Development
 
@@ -72,9 +78,21 @@ For Flutter development help, visit the [official documentation](https://docs.fl
 ## Color Scheme
 
 - **Background**: `#192A31` (Dark blue-green)
-- **Cards**: `#293949` (Medium gray-blue)
+- **Cards**: `#293949` (Medium gray-blue)  
 - **Highlights**: `#00C8FA` (Bright cyan)
 - **Secondary**: `#586A80` (Muted gray-blue)
+- **Gradients**: Various opacity levels for modern card designs
+- **Category Colors**: Smart color coding for recommendation types (Red for Peak Hours, Orange for Routes, Gold for Timing, Green for Low Traffic)
+
+## Recent Updates
+
+### Latest Features ✨
+- **Redesigned Traffic Summary**: Modern card-based layout with gradients and better spacing
+- **Enhanced Custom Predictions**: Interactive datetime picker with real-time API integration
+- **Smart Recommendation Cards**: Auto-categorized recommendations with type-specific icons and colors
+- **Improved Chart Display**: Optimized sizing and grid lines for better data visualization
+- **Tabbed Recommendations**: Separate sections for General and Custom Prediction recommendations
+- **UI Consistency**: Standardized modern design language across all components
 
 ---
 
